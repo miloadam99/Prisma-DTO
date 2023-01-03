@@ -1,6 +1,6 @@
 {
   "name": "prisma-dto",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "description": "Convert your typescript classes into a prisma schema",
   "main": "index.js",
   "directories": {

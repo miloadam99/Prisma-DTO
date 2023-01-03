@@ -1,8 +1,7 @@
-import { IField } from "../types/field.interface";
+import { IField, iUIDFieldTypes } from "../types/field.interface";
 import { IModel } from "../types/model.interface";
 import fsProm from "fs/promises"
 import { Path } from "typescript";
-import { Field } from "..";
 
 export class MetadataStorageData {
     constructor(data: MetadataStorage) { Object.assign(this, data) }
@@ -56,7 +55,9 @@ model ${model.name} {
             flags.push("@unique")
         }
 
-        if (field.default) {
+        if (iUIDFieldTypes.includes(type as any)) {
+            flags.push("@id")
+        }   else if (field.default) {
             flags.push(`@default(${field.default})`)
         }
 
@@ -65,7 +66,10 @@ model ${model.name} {
             flags.push("@id", "@default(autoincrement())");
         }   else if (type === "uuid") {
             type = "string";
-            flags.push("@id", "@default(uuid())");
+            flags.push("@default(uuid())");
+        }   else if (type === "nanoid") {
+            type = "string";
+            flags.push(`@default(nanoid(${field.nanoidOptions?.length || 21}))`)
         }   else if (type === "model") {
             if (!field.modelId) {
                 throw new Error("Model doesn't have type to match...");
@@ -76,6 +80,7 @@ model ${model.name} {
                 type = model.name;
             }   else {
                 type = "json";
+                field.array = false;
             }
         }
 

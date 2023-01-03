@@ -3,9 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.Field = void 0;
 const storage_1 = require("../metadata/storage");
 let typeToNative = new Map()
-    .set("bigint", "float")
+    .set("bigint", "bigint")
     .set("number", "float")
-    .set("object", "json");
+    .set("object", "json")
+    .set("boolean", "boolean");
 /**
  * Takes variable and determines its FieldType...
  * @param variable
@@ -19,7 +20,6 @@ function getTypeFromNative(variable) {
         return getTypeFromNative(variable[0]);
     }
     let nativeType = typeof variable;
-    console.log(nativeType);
     if (nativeType === "undefined") {
         throw new Error("Invalid type input: undefined");
     }

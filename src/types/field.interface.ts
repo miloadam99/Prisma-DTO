@@ -1,4 +1,9 @@
-export type IFieldType = "int" | "float" | "string" | "json" | "uuid" | "id";
+import { INanoidConfig } from "../..";
+
+export type IFieldType = "int" | "bigint" | "boolean" | "float" | "string" | "json" | IUIDFieldType;
+export type IUIDFieldType = "id" | "uuid" | "nanoid";
+
+export const iUIDFieldTypes: IUIDFieldType[] = ["id", "uuid", "nanoid"];
 
 export interface IField {
     class: string;
@@ -6,6 +11,8 @@ export interface IField {
     nullable: boolean;
     unique: boolean;
     array: boolean;
+    primary: boolean;
+    nanoidOptions?: INanoidConfig;
     default?: any;
     type: IFieldType | "model";
     modelId?: string;

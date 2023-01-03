@@ -76,6 +76,7 @@ model ${model.name} {
                         }
                         else {
                             type = "json";
+                            field.array = false;
                         }
                     }
                     if (type !== "model") {

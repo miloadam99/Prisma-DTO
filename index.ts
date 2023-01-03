@@ -1,12 +1,9 @@
 import 'reflect-metadata'
 import prompts from "prompts";
-import { storage } from './metadata/storage';
-import path from "path";
-import { Model } from './decorators/model'
-import { Field } from './decorators/field'
+import { storage } from './src/metadata/storage';
 
-export * from './decorators/model';
-export * from './decorators/field';
+export * from './src/decorators/model';
+export * from './src/decorators/field';
 
 // @Model()
 // export class IExample {

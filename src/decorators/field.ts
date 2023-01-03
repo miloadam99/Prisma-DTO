@@ -4,15 +4,31 @@ import { IField, IFieldType } from "../types/field.interface";
 export interface IFieldConfig {
     // type?: IFieldType;
     nullable?: boolean;
+    primary?: boolean;
     unique?: boolean;
     array?: boolean;
     default?: any;
 }
 
+export interface INanoidConfig {
+    /*
+     * Defaults to 21
+     */
+    length?: number;
+
+    customAlphabet?: string;
+
+    /**
+     * Defaults to true,
+     */
+    secure?: boolean;
+}
+
 let typeToNative = new Map<string, IFieldType>()
-    .set("bigint", "float")
+    .set("bigint", "bigint")
     .set("number", "float")
     .set("object", "json")
+    .set("boolean", "boolean")
 
 /**
  * Takes variable and determines its FieldType... 
@@ -29,8 +45,6 @@ function getTypeFromNative(variable: any): IFieldType {
     }
 
     let nativeType = typeof variable;
-
-    console.log(nativeType)
 
     if (nativeType === "undefined") {
         throw new Error("Invalid type input: undefined")
@@ -54,13 +68,15 @@ type Class = { new(...args: any[]): any; };
  * @param options 
  */
 export function Field(): PropertyDecorator;
+export function Field(typeReturn: "nanoid", options: IFieldConfig, nanoidOptions: INanoidConfig): PropertyDecorator
 export function Field(typeReturn: TypeReturn): PropertyDecorator;
 export function Field(options: IFieldConfig): PropertyDecorator;
 export function Field(options: IFieldConfig, typeReturn: TypeReturn): PropertyDecorator
 export function Field(typeReturn: TypeReturn, options: IFieldConfig): PropertyDecorator
 export function Field(
     optsOrRun?: ReturnOrOpts,
-    runOrOpts?: ReturnOrOpts
+    runOrOpts?: ReturnOrOpts,
+    nanoidOptions?: INanoidConfig
 ): PropertyDecorator  {
     return (target, key) => {
         let options: IFieldConfig = typeof optsOrRun === "object" ? optsOrRun as any : runOrOpts;
@@ -92,6 +108,8 @@ export function Field(
             array: options?.array || false,
             unique:  options?.unique || false,
             default: options?.default,
+            primary: options?.primary || false,
+            nanoidOptions: nanoidOptions,
             type,
             modelId,
         })
