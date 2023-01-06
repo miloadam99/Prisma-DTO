@@ -1,4 +1,4 @@
-import { storage } from "../metadata/storage"
+import { storage } from "../storage"
 
 /**
  * Adds this class to the generated prisma schema
@@ -8,5 +8,7 @@ export function Model(name?: string): ClassDecorator  {
         storage.addModel({
             name: name || target.name,
         })
+
+        Reflect.defineMetadata("prisma:name", name || target.name, target);
     }
 }  

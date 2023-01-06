@@ -12,23 +12,20 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.storage = exports.MetadataStorage = exports.MetadataStorageData = void 0;
+exports.SchemaGenerator = void 0;
 const promises_1 = __importDefault(require("fs/promises"));
-class MetadataStorageData {
-    constructor(data) { Object.assign(this, data); }
-}
-exports.MetadataStorageData = MetadataStorageData;
-class MetadataStorage {
-    constructor(data) {
-        this.data = data || { models: [], fields: [] };
+const storage_1 = require("./storage");
+const field_interface_1 = require("./types/field.interface");
+class SchemaGenerator {
+    constructor(options) {
+        this.options = options;
     }
-    addModel(model) {
-        this.data.models.push(model);
-    }
-    addField(field) {
-        this.data.fields.push(field);
-    }
-    savePrismaSchema(outputPath) {
+    /**
+     * Genereates a schema.prisma for prisma database
+     * @param outputPath File to export prisma schema to
+     * @param models list of classes to include in prisma schema
+     */
+    exportPrismaSchema(outputPath) {
         return __awaiter(this, void 0, void 0, function* () {
             // Instead of writing pure schema we'll upsert each individual model
             let curSchema = (yield promises_1.default.readFile(outputPath, { encoding: "utf8" })
@@ -45,32 +42,45 @@ generator client {
     provider = "prisma-client-js"
 }`.trim() + `\n\n`;
             }
-            for (let model of this.data.models) {
-                let fields = this.data.fields.filter(field => field.class === model.name);
+            let newSchemas = [];
+            for (let model of storage_1.storage.data.models) {
+                let fields = storage_1.storage.data.fields.filter(field => field.class === model.name);
                 let schemaModel = `
 model ${model.name} {
     ${fields.map(field => {
+                    var _a;
                     let type = field.type;
                     let flags = [];
                     if (field.unique) {
                         flags.push("@unique");
                     }
-                    if (field.default) {
+                    if (field.primary) {
+                        flags.push("@id");
+                    }
+                    if (!field_interface_1.iUIDFieldTypes.includes(type) && field.default) {
                         flags.push(`@default(${field.default})`);
                     }
                     if (type === "id") {
                         type = "int";
-                        flags.push("@id", "@default(autoincrement())");
+                        flags.push("@default(autoincrement())");
                     }
                     else if (type === "uuid") {
                         type = "string";
-                        flags.push("@id", "@default(uuid())");
+                        flags.push("@default(uuid())");
+                    }
+                    else if (type === "nanoid") {
+                        type = "string";
+                        flags.push(`@default(nanoid(${((_a = field.nanoidOptions) === null || _a === void 0 ? void 0 : _a.length) || 21}))`);
+                    }
+                    else if (type === "cuid") {
+                        type = 'string';
+                        flags.push("@default(cuid())");
                     }
                     else if (type === "model") {
                         if (!field.modelId) {
                             throw new Error("Model doesn't have type to match...");
                         }
-                        let model = exports.storage.data.models.find(model => model.name === field.modelId);
+                        let model = storage_1.storage.data.models.find(model => model.name === field.modelId);
                         if (model) {
                             type = model.name;
                         }
@@ -81,6 +91,9 @@ model ${model.name} {
                     }
                     if (type !== "model") {
                         type = type.charAt(0).toUpperCase() + type.slice(1);
+                        if (type === "Bigint") {
+                            type = "BigInt";
+                        }
                     }
                     return `${field.key} ${type}${field.array ? '[]' : field.nullable ? '?' : ''} ${flags.join(' ')}`;
                 }).join('\n    ')}
@@ -91,20 +104,18 @@ model ${model.name} {
                     if (ending === -1) {
                         throw new Error("Coudln't find ending for model");
                     }
-                    let nextModelIndex = curSchema.indexOf(`model`, modelIndex + 1);
-                    if (nextModelIndex > ending) {
-                        throw new Error("Badly formatted prisma schema");
-                    }
+                    // let nextModelIndex = curSchema.indexOf(`model`, modelIndex + 1);
+                    // if (nextModelIndex > ending) {
+                    //     throw new Error("Badly formatted prisma schema")
+                    // }
                     let starting = curSchema.slice(0, modelIndex);
-                    curSchema = starting + schemaModel + starting.slice(ending);
+                    curSchema = starting + starting.slice(ending);
                 }
-                else {
-                    curSchema += schemaModel;
-                }
+                newSchemas.push(schemaModel);
             }
+            curSchema += newSchemas.join(`\n\n`);
             yield promises_1.default.writeFile(outputPath, curSchema);
         });
     }
 }
-exports.MetadataStorage = MetadataStorage;
-exports.storage = new MetadataStorage();
+exports.SchemaGenerator = SchemaGenerator;

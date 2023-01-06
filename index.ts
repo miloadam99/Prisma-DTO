@@ -1,9 +1,10 @@
 import 'reflect-metadata'
 import prompts from "prompts";
-import { storage } from './src/metadata/storage';
 
 export * from './src/decorators/model';
 export * from './src/decorators/field';
+export * from './src/generator'
+
 
 // @Model()
 // export class IExample {
@@ -23,12 +24,12 @@ export * from './src/decorators/field';
 //     levels: number[];
 // }
 
-(async () => {
-    let { schemaPath } = await prompts({
-      type: 'text',
-      name: 'schemaPath',
-      message: 'Where is your schema located?',
-    });
+// (async () => {
+//   let { schemaPath } = await prompts({
+//     type: 'text',
+//     name: 'schemaPath',
+//     message: 'Where is your schema located?',
+//   });
 
-    await storage.savePrismaSchema(schemaPath);
-})();  
+//   await generator.savePrismaSchema(schemaPath);
+// })();

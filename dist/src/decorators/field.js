@@ -1,12 +1,13 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Field = void 0;
-const storage_1 = require("../metadata/storage");
+const storage_1 = require("../storage");
 let typeToNative = new Map()
     .set("bigint", "bigint")
     .set("number", "float")
     .set("object", "json")
-    .set("boolean", "boolean");
+    .set("boolean", "boolean")
+    .set("string", "string");
 /**
  * Takes variable and determines its FieldType...
  * @param variable
@@ -29,8 +30,9 @@ function getTypeFromNative(variable) {
     }
     return type;
 }
-function Field(optsOrRun, runOrOpts) {
+function Field(optsOrRun, runOrOpts, nanoidOptions) {
     return (target, key) => {
+        // console.log(`@Field called on '${String(key)}' from '${target.constructor.name}'`);
         let options = typeof optsOrRun === "object" ? optsOrRun : runOrOpts;
         let typeReturn = (typeof optsOrRun === "function" || typeof optsOrRun === "string") ? optsOrRun : runOrOpts;
         let nativeType = Reflect.getOwnMetadata("design:type", target, key)();
@@ -58,6 +60,8 @@ function Field(optsOrRun, runOrOpts) {
             array: (options === null || options === void 0 ? void 0 : options.array) || false,
             unique: (options === null || options === void 0 ? void 0 : options.unique) || false,
             default: options === null || options === void 0 ? void 0 : options.default,
+            primary: (options === null || options === void 0 ? void 0 : options.primary) || false,
+            nanoidOptions: nanoidOptions,
             type,
             modelId,
         });

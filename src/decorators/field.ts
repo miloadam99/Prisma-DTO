@@ -1,4 +1,4 @@
-import { storage } from "../metadata/storage";
+import { storage } from "../storage";
 import { IField, IFieldType } from "../types/field.interface";
 
 export interface IFieldConfig {
@@ -29,6 +29,7 @@ let typeToNative = new Map<string, IFieldType>()
     .set("number", "float")
     .set("object", "json")
     .set("boolean", "boolean")
+    .set("string", "string")
 
 /**
  * Takes variable and determines its FieldType... 
@@ -79,6 +80,8 @@ export function Field(
     nanoidOptions?: INanoidConfig
 ): PropertyDecorator  {
     return (target, key) => {
+        // console.log(`@Field called on '${String(key)}' from '${target.constructor.name}'`);
+
         let options: IFieldConfig = typeof optsOrRun === "object" ? optsOrRun as any : runOrOpts;
         let typeReturn: TypeReturn = (typeof optsOrRun === "function" || typeof optsOrRun === "string") ? optsOrRun as any : runOrOpts;
         
