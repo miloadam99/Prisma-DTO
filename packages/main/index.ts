@@ -1,9 +1,10 @@
 import 'reflect-metadata'
-import prompts from "prompts";
 
 export * from './src/decorators/model';
 export * from './src/decorators/field';
-export * from './src/generator'
+
+// import { Model } from "./src/decorators/model"
+// import { Field } from "./src/decorators/field"
 
 
 // @Model()
@@ -14,11 +15,11 @@ export * from './src/generator'
 //         this.levels = example.levels;
 //     }
 
-//     @Field("uuid")
+//     @Field("uuid", { primary: true })
 //     id!: string;
 
-//     @Field("string", { nullable: true })
-//     name?: string;
+//     @Field()
+//     name?: bigint;
 
 //     @Field("int", { array: true })
 //     levels: number[];

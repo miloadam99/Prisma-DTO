@@ -1,4 +1,3 @@
-import { storage } from "../storage";
 import { IField, IFieldType } from "../types/field.interface";
 
 export interface IFieldConfig {
@@ -45,13 +44,13 @@ function getTypeFromNative(variable: any): IFieldType {
         return getTypeFromNative(variable[0])
     }
 
-    let nativeType = typeof variable;
+    // let nativeType = typeof variable;
 
-    if (nativeType === "undefined") {
+    if (variable === "undefined") {
         throw new Error("Invalid type input: undefined")
     }
 
-    let type = typeToNative.get(nativeType);
+    let type = typeToNative.get(variable.name.toLowerCase());
     if (!type) {
         throw new Error("Couldn't determine field type: invalid")
     }
@@ -80,12 +79,10 @@ export function Field(
     nanoidOptions?: INanoidConfig
 ): PropertyDecorator  {
     return (target, key) => {
-        // console.log(`@Field called on '${String(key)}' from '${target.constructor.name}'`);
-
         let options: IFieldConfig = typeof optsOrRun === "object" ? optsOrRun as any : runOrOpts;
         let typeReturn: TypeReturn = (typeof optsOrRun === "function" || typeof optsOrRun === "string") ? optsOrRun as any : runOrOpts;
         
-        let nativeType = Reflect.getOwnMetadata("design:type",  target, key)();
+        let nativeType = Reflect.getOwnMetadata("design:type",  target, key);
 
         let type: IField["type"];
         let modelId: string | undefined = undefined;
@@ -101,21 +98,20 @@ export function Field(
                 type = typeReturn;
             }
         }
-        
-        // console.log(type)
 
-        storage.addField({
+        Reflect.defineMetadata("model:fields", [...Reflect.getMetadata("model:fields", target) ?? [], key], target);
+        
+        Reflect.defineMetadata(`field:options`, {
             key: key.toString(),
             class: target.constructor.name,
             nullable: options?.nullable || false,
             array: options?.array || false,
-            unique:  options?.unique || false,
+            unique: options?.unique || false,
             default: options?.default,
             primary: options?.primary || false,
             nanoidOptions: nanoidOptions,
             type,
             modelId,
-        })
-
+        }, target, key);
     }
 }  

@@ -1,1 +1,4 @@
-/node_modules
+/packages/main/node_modules
+/packages/main/dist
+/packages/generator/node_modules
+/packages/generator/dist

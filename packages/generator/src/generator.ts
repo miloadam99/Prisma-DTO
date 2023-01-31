@@ -1,6 +1,5 @@
 import fsProm from "fs/promises"
-import { storage } from "./storage";
-import { IField, iUIDFieldTypes } from "./types/field.interface";
+import { IField, iUIDFieldTypes } from "prisma-dto/dist/src/types/field.interface";
 
 export type Class = (...args: any[]) => any;
 
@@ -11,6 +10,8 @@ export interface ISchemaOptions {
 export class SchemaGenerator {
     constructor(options: ISchemaOptions) {
         this.options = options;
+
+
     }
 
     options: ISchemaOptions;
@@ -25,8 +26,8 @@ export class SchemaGenerator {
         
         // Instead of writing pure schema we'll upsert each individual model
         let curSchema = (await fsProm.readFile(outputPath, { encoding: "utf8" })
-            .then(s => s.replace(/  +/g, ' '))
-            .catch(e => ''));
+            .then((s: string) => s.replace(/  +/g, ' '))
+            .catch((e: any) => ''));
 
         if (!curSchema) {
             curSchema = `
@@ -40,27 +41,41 @@ generator client {
 }`.trim() + `\n\n`
         }
 
+        const models: { model: any, name: string, fields: string[] }[] = this.options.models.map(m => {
+            // @ts-ignore
+            const model = new m();
+
+            const options = Reflect.getMetadata("model:options", model);
+
+            return {
+                model,
+                name: options.name || options.class,
+                fields: Reflect.getMetadata("model:fields", model)
+            }
+            
+        })
+
         let newSchemas: string[] = [];
 
-        for (let model of storage.data.models) {
-            let fields = storage.data.fields.filter(field => field.class === model.name);
-
+        for (let model of models) {
             let schemaModel = `
 model ${model.name} {
-    ${fields.map(field => {
-        let type : IField["type"] | string = field.type;
+    ${model.fields.map(field => {
+        const fieldOptions: IField = Reflect.getMetadata('field:options', model.model, field);
+
+        let type : IField["type"] | string = fieldOptions.type;
         let flags : string[] = [];
 
-        if (field.unique) {
+        if (fieldOptions.unique) {
             flags.push("@unique")
         }
 
-        if (field.primary) {
+        if (fieldOptions.primary) {
             flags.push("@id")
         }
 
-        if (!iUIDFieldTypes.includes(type as any) && field.default) {
-            flags.push(`@default(${field.default})`)
+        if (!iUIDFieldTypes.includes(type as any) && fieldOptions.default) {
+            flags.push(`@default(${fieldOptions.default})`)
         }
 
         if (type === "id") {
@@ -71,21 +86,21 @@ model ${model.name} {
             flags.push("@default(uuid())");
         }   else if (type === "nanoid") {
             type = "string";
-            flags.push(`@default(nanoid(${field.nanoidOptions?.length || 21}))`)
+            flags.push(`@default(nanoid(${fieldOptions.nanoidOptions?.length || 21}))`)
         }   else if (type === "cuid") {
             type = 'string';
             flags.push("@default(cuid())")
         }   else if (type === "model") {
-            if (!field.modelId) {
+            if (!fieldOptions.modelId) {
                 throw new Error("Model doesn't have type to match...");
             }
 
-            let model = storage.data.models.find(model => model.name === field.modelId);
-            if (model) {
-                type = model.name;
+            let related = models.find((m) => m.name === fieldOptions.modelId);
+            if (related) {
+                type = related.name;
             }   else {
                 type = "json";
-                field.array = false;
+                fieldOptions.array = false;
             }
         }
 
@@ -97,11 +112,11 @@ model ${model.name} {
             }
         }
 
-        return `${field.key} ${type}${field.array ? '[]' : field.nullable ? '?' : ''} ${flags.join(' ')}`
+        return `${fieldOptions.key} ${type}${fieldOptions.array ? '[]' : fieldOptions.nullable ? '?' : ''} ${flags.join(' ')}`
     }).join('\n    ')}
 }           `.trim();
 
-            let modelIndex = curSchema.indexOf(`model ${model.name}`);
+            let modelIndex = curSchema.indexOf(`model ${name}`);
             if (modelIndex !== -1) {
                 let ending = curSchema.indexOf(`}`, modelIndex);
                 if (ending === -1) {

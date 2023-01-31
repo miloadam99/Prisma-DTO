@@ -1,0 +1,1 @@
+export { SchemaGenerator } from "./src/generator"
