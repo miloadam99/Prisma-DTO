@@ -3,7 +3,10 @@
  */
 export function Model(name?: string): ClassDecorator  {
     return (target) => {
-        console.log(`@Model called on ${name || target.name}'`);
-        Reflect.defineMetadata("model:options", { name: name, class: target.name }, target);
+        console.log(`@Model called on ${name || target.name}`);
+
+        if (name) {
+            Reflect.defineMetadata("model:name", name, target);
+        }
     }
 }  

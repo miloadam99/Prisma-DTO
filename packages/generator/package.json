@@ -1,6 +1,6 @@
 {
   "name": "prisma-dto-generator",
-  "version": "1.2.8",
+  "version": "1.4.2",
   "description": "Convert your typescript classes into a prisma schema",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -8,11 +8,23 @@
     "example": "example"
   },
   "author": "miloadam99",
-  "files": ["dist/**"],
+  "files": [
+    "dist/index.d.ts",
+    "dist/index.js",
+    "dist/src/**"
+  ],
+  "scripts": {
+    "test": "mocha --timeout 10000 -r ts-node/register test/**/*.ts"
+  },
   "license": "ISC",
   "dependencies": {
-    "prisma-dto": "^1.2.7",
+    "prisma-dto": "^1.4.2",
     "reflect-metadata": "^0.1.13",
     "typescript": "^4.9.4"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7"
   }
 }

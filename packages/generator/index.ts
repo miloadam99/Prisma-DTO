@@ -1,1 +1,1 @@
-export { SchemaGenerator } from "./src/generator"
+export { generateSchema } from "./src/generator";
